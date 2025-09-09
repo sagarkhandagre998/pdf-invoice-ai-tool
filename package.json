@@ -1,0 +1,19 @@
+{
+  "name": "pdf-viewer-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "setup": "node scripts/setup.js"
+  },
+  "devDependencies": {
+    "turbo": "^1.10.12"
+  },
+  "packageManager": "npm@9.6.7",
+  "workspaces": [
+    "apps/*"
+  ]
+}

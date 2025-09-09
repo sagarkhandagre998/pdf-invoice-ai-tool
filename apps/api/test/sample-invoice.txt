@@ -1,0 +1,25 @@
+INVOICE
+
+Vendor Information:
+Company: Acme Corporation
+Address: 123 Business Street, City, State 12345
+Tax ID: 12-3456789
+
+Invoice Details:
+Invoice Number: INV-2024-001
+Date: 2024-01-15
+Currency: USD
+PO Number: PO-2024-001
+PO Date: 2024-01-10
+
+Line Items:
+1. Web Development Services - $150.00 per hour x 40 hours = $6,000.00
+2. Database Design - $200.00 per hour x 20 hours = $4,000.00
+3. Testing and QA - $100.00 per hour x 15 hours = $1,500.00
+
+Subtotal: $11,500.00
+Tax Rate: 8.5%
+Tax Amount: $977.50
+Total: $12,477.50
+
+Payment Terms: Net 30 days
