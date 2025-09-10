@@ -21,11 +21,6 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Routes
-app.use('/api/upload', uploadRoutes);
-app.use('/api/extract', extractRoutes);
-app.use('/api/invoices', invoiceRoutes);
-
 // Root route for debugging
 app.get('/', (req, res) => {
   res.json({ 
@@ -48,6 +43,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// API Routes
+app.use('/api/upload', uploadRoutes);
+app.use('/api/extract', extractRoutes);
+app.use('/api/invoices', invoiceRoutes);
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
@@ -57,7 +57,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// 404 handler
+// 404 handler (must be last)
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
