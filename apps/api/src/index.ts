@@ -21,6 +21,12 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.url} - ${new Date().toISOString()}`);
+  next();
+});
+
 // Root route for debugging
 app.get('/', (req, res) => {
   res.json({ 
@@ -43,10 +49,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// Test route to verify routing works
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Test route is working!', timestamp: new Date().toISOString() });
+});
+
 // API Routes
+console.log('🔧 Mounting API routes...');
 app.use('/api/upload', uploadRoutes);
+console.log('✅ Upload route mounted');
 app.use('/api/extract', extractRoutes);
+console.log('✅ Extract route mounted');
 app.use('/api/invoices', invoiceRoutes);
+console.log('✅ Invoices route mounted');
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

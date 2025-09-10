@@ -2,29 +2,37 @@ import mongoose from 'mongoose';
 
 export const connectDB = async (): Promise<void> => {
   try {
-    // For development, use local MongoDB to avoid Atlas SSL issues
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pdf-dashboard';
+    const mongoURI = process.env.MONGODB_URI;
     
-    // If the URI contains Atlas connection or has SSL issues, use local MongoDB for development
-    const useLocalDB = mongoURI.includes('_mongodb._tcp') || 
-                      mongoURI.includes('mongodb+srv://') || 
-                      process.env.NODE_ENV === 'development';
+    if (!mongoURI) {
+      throw new Error('MONGODB_URI environment variable is not set');
+    }
     
-    const finalURI = useLocalDB ? 'mongodb://localhost:27017/pdf-dashboard' : mongoURI;
+    // If already connected, return
+    if (mongoose.connection.readyState === 1) {
+      console.log('✅ Using existing MongoDB connection');
+      return;
+    }
     
-    console.log(`🔗 Attempting to connect to: ${useLocalDB ? 'Local MongoDB' : 'Atlas MongoDB'}`);
+    console.log(`🔗 Attempting to connect to MongoDB Atlas...`);
     
-    // Simple connection options
+    // Optimized connection options for Vercel serverless
     const options = {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+      maxPoolSize: 1, // Limit connection pool for serverless
+      minPoolSize: 0, // Allow connections to close
+      maxIdleTimeMS: 30000, // Close connections after 30 seconds
+      bufferMaxEntries: 0, // Disable mongoose buffering
+      bufferCommands: false, // Disable mongoose buffering
     };
     
-    await mongoose.connect(finalURI, options);
-    console.log('✅ Connected to MongoDB');
+    await mongoose.connect(mongoURI, options);
+    console.log('✅ Connected to MongoDB Atlas');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);
-    console.log('💡 Make sure MongoDB is running locally or update MONGODB_URI in your environment');
+    console.log('💡 Check your MONGODB_URI and MongoDB Atlas network access settings');
     throw error;
   }
 };
