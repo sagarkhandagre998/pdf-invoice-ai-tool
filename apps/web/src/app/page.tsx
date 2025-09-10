@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Trash2, Eye, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import PDFViewer from '@/components/PDFViewer';
@@ -17,6 +17,25 @@ interface LineItem {
   unitPrice: number;
   quantity: number;
   total: number;
+}
+
+interface InvoiceFormData {
+  vendor: {
+    name: string;
+    address?: string;
+    taxId?: string;
+  };
+  invoice: {
+    number: string;
+    date: string;
+    currency?: string;
+    subtotal?: number;
+    taxPercent?: number;
+    total?: number;
+    poNumber?: string;
+    poDate?: string;
+    lineItems: LineItem[];
+  };
 }
 
 interface Vendor {
@@ -142,7 +161,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: InvoiceFormData) => {
     try {
       setIsSaving(true);
       

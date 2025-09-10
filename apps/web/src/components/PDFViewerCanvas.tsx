@@ -6,11 +6,10 @@ import { ZoomIn, ZoomOut, Download, Maximize2, RotateCw, Upload } from 'lucide-r
 
 interface PDFViewerCanvasProps {
   fileUrl: string;
-  onError?: () => void;
   onNewUpload?: () => void;
 }
 
-export default function PDFViewerCanvas({ fileUrl, onError, onNewUpload }: PDFViewerCanvasProps) {
+export default function PDFViewerCanvas({ fileUrl, onNewUpload }: PDFViewerCanvasProps) {
   const [scale, setScale] = useState(1.0);
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);

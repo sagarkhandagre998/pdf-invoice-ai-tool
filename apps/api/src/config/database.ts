@@ -2,13 +2,25 @@ import mongoose from 'mongoose';
 
 export const connectDB = async (): Promise<void> => {
   try {
-    // Use a local MongoDB connection for development
+    // For development, use local MongoDB to avoid Atlas SSL issues
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pdf-dashboard';
     
-    // If the URI looks like it's trying to connect to a non-existent service, use local
-    const finalURI = mongoURI.includes('_mongodb._tcp') ? 'mongodb://localhost:27017/pdf-dashboard' : mongoURI;
+    // If the URI contains Atlas connection or has SSL issues, use local MongoDB for development
+    const useLocalDB = mongoURI.includes('_mongodb._tcp') || 
+                      mongoURI.includes('mongodb+srv://') || 
+                      process.env.NODE_ENV === 'development';
     
-    await mongoose.connect(finalURI);
+    const finalURI = useLocalDB ? 'mongodb://localhost:27017/pdf-dashboard' : mongoURI;
+    
+    console.log(`🔗 Attempting to connect to: ${useLocalDB ? 'Local MongoDB' : 'Atlas MongoDB'}`);
+    
+    // Simple connection options
+    const options = {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    };
+    
+    await mongoose.connect(finalURI, options);
     console.log('✅ Connected to MongoDB');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);

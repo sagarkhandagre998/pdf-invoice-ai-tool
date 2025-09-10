@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload } from 'lucide-react';
@@ -58,9 +58,6 @@ export default function PDFViewer({ fileUrl, onFileSelect }: PDFViewerProps) {
     }
   };
 
-  const handlePDFError = () => {
-    setUseFallback(true);
-  };
 
   const handleNewUpload = () => {
     setShowUpload(true);
@@ -136,11 +133,10 @@ export default function PDFViewer({ fileUrl, onFileSelect }: PDFViewerProps) {
               />
             </div>
           ) : (
-            <PDFViewerCanvas 
-              fileUrl={fileUrl} 
-              onError={handlePDFError}
-              onNewUpload={handleNewUpload}
-            />
+                   <PDFViewerCanvas 
+                     fileUrl={fileUrl} 
+                     onNewUpload={handleNewUpload}
+                   />
           )
         )}
 
