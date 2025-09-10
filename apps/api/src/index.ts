@@ -26,6 +26,23 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/extract', extractRoutes);
 app.use('/api/invoices', invoiceRoutes);
 
+// Root route for debugging
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'PDF Dashboard API is running!',
+    endpoints: [
+      'POST /api/upload - Upload PDF files',
+      'POST /api/extract - Extract data from PDF',
+      'GET /api/invoices - List all invoices',
+      'POST /api/invoices - Create new invoice',
+      'PUT /api/invoices/:id - Update invoice',
+      'DELETE /api/invoices/:id - Delete invoice',
+      'GET /api/health - Health check'
+    ],
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
