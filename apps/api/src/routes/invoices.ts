@@ -8,6 +8,7 @@ const router = express.Router();
 const CreateInvoiceSchema = z.object({
   fileId: z.string(),
   fileName: z.string(),
+  fileUrl: z.string().optional(), // For production (Vercel Blob URL)
   vendor: z.object({
     name: z.string(),
     address: z.string().optional(),

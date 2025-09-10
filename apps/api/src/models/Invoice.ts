@@ -28,6 +28,7 @@ export interface InvoiceData {
 export interface IInvoice extends Document {
   fileId: string;
   fileName: string;
+  fileUrl?: string; // For production (Vercel Blob URL)
   vendor: Vendor;
   invoice: InvoiceData;
   createdAt: Date;
@@ -62,6 +63,7 @@ const InvoiceDataSchema = new Schema<InvoiceData>({
 const InvoiceSchema = new Schema<IInvoice>({
   fileId: { type: String, required: true, unique: true },
   fileName: { type: String, required: true },
+  fileUrl: { type: String }, // For production (Vercel Blob URL)
   vendor: { type: VendorSchema, required: true },
   invoice: { type: InvoiceDataSchema, required: true },
   createdAt: { type: Date, default: Date.now },

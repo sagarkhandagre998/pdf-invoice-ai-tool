@@ -8,22 +8,37 @@ const router = express.Router();
 // Validation schema for extract request
 const ExtractRequestSchema = z.object({
   fileId: z.string(),
-  model: z.enum(['gemini']) // Only Gemini is supported (free)
+  model: z.enum(['gemini']), // Only Gemini is supported (free)
+  fileUrl: z.string().optional() // Vercel Blob URL for the PDF
 });
 
 // POST /api/extract - Extract data from PDF using AI
 router.post('/', async (req, res) => {
   try {
-    const { fileId, model } = ExtractRequestSchema.parse(req.body);
+    const { fileId, model, fileUrl } = ExtractRequestSchema.parse(req.body);
     
-    // Get the PDF file path
-    const filePath = await UploadService.getFilePath(fileId);
+    // For Vercel Blob, we need to fetch the PDF from the URL
+    let pdfBuffer: Buffer;
+    
+    if (fileUrl) {
+      // Fetch PDF from Vercel Blob URL
+      const response = await fetch(fileUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PDF from URL: ${response.statusText}`);
+      }
+      pdfBuffer = Buffer.from(await response.arrayBuffer());
+    } else {
+      // Fallback: try to get from local storage (for development)
+      try {
+        const filePath = await UploadService.getFilePath(fileId);
+        pdfBuffer = await import('fs').then(fs => fs.promises.readFile(filePath));
+      } catch (error) {
+        throw new Error('No file URL provided and local file not found. Please upload the file first.');
+      }
+    }
     
     // Dynamically import pdf-parse to avoid initialization issues
     const pdf = (await import('pdf-parse')).default;
-    
-    // Read and parse the PDF
-    const pdfBuffer = await import('fs').then(fs => fs.promises.readFile(filePath));
     const pdfData = await pdf(pdfBuffer);
     
     // Extract data using AI

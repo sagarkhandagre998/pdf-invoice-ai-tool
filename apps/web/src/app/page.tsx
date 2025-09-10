@@ -60,6 +60,7 @@ interface Invoice {
   _id: string;
   fileId: string;
   fileName: string;
+  fileUrl?: string; // For production (Vercel Blob URL)
   vendor: Vendor;
   invoice: InvoiceData;
   createdAt: string;
@@ -75,6 +76,7 @@ export default function Dashboard() {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [uploadedFileId, setUploadedFileId] = useState<string | null>(null);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -119,6 +121,7 @@ export default function Dashboard() {
       });
       
       setUploadedFileId(response.data.data.fileId);
+      setUploadedFileUrl(response.data.data.fileUrl || null);
       toast.success('PDF uploaded successfully');
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -136,7 +139,8 @@ export default function Dashboard() {
       setIsExtracting(true);
       const response = await axios.post(`${API_BASE_URL}/extract`, {
         fileId: uploadedFileId,
-        model: 'gemini' // Only use Gemini (free)
+        model: 'gemini', // Only use Gemini (free)
+        fileUrl: uploadedFileUrl // Pass the Vercel Blob URL
       });
       
       // Update the form with extracted data
@@ -168,6 +172,7 @@ export default function Dashboard() {
       const invoiceData = {
         fileId: uploadedFileId || selectedInvoice?.fileId,
         fileName: currentFile?.name || selectedInvoice?.fileName,
+        fileUrl: uploadedFileUrl || selectedInvoice?.fileUrl,
         ...data
       };
 
@@ -279,7 +284,7 @@ export default function Dashboard() {
           {/* PDF Upload */}
           <div className="h-[600px]">
             <PDFViewer
-              fileUrl={currentFile ? URL.createObjectURL(currentFile) : undefined}
+              fileUrl={uploadedFileUrl || undefined}
               onFileSelect={handleFileSelect}
             />
           </div>
