@@ -1,6 +1,7 @@
 import express from 'express';
 import { AIService } from '../services/aiService.js';
 import { UploadService } from '../services/uploadService.js';
+import { QuotaHelper } from '../utils/quotaHelper.js';
 import { z } from 'zod';
 
 const router = express.Router();
@@ -59,8 +60,50 @@ router.post('/', async (req, res) => {
       });
     }
     
+    // Handle quota exceeded errors with specific status code
+    if (error instanceof Error && error.name === 'QuotaExceededError') {
+      const quotaInfo = QuotaHelper.getQuotaInfo(error);
+      return res.status(429).json({
+        error: 'API Quota Exceeded',
+        message: error.message,
+        quotaInfo,
+        retryAfter: quotaInfo.retryAfter,
+        suggestions: quotaInfo.suggestions
+      });
+    }
+    
+    // Handle API key errors
+    if (error instanceof Error && error.message.includes('API key')) {
+      return res.status(401).json({
+        error: 'API Configuration Error',
+        message: error.message
+      });
+    }
+    
     res.status(500).json({
       error: 'Extraction failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/extract/quota - Check quota status
+router.get('/quota', (req, res) => {
+  try {
+    const quotaUsage = QuotaHelper.getQuotaUsageEstimate();
+    
+    res.json({
+      success: true,
+      quota: quotaUsage,
+      info: {
+        freeTierLimit: 50,
+        resetPeriod: '24 hours',
+        upgradeUrl: 'https://ai.google.dev/pricing'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to get quota information',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

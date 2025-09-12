@@ -30,12 +30,22 @@ export type ExtractedData = z.infer<typeof ExtractedDataSchema>;
 
 export class AIService {
   private gemini: GoogleGenerativeAI;
+  private cache: Map<string, ExtractedData> = new Map();
 
   constructor() {
     this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
   }
 
   async extractDataFromPDF(pdfText: string, model: 'gemini'): Promise<ExtractedData> {
+    // Create a simple hash of the PDF text for caching
+    const textHash = this.createTextHash(pdfText);
+    
+    // Check cache first
+    if (this.cache.has(textHash)) {
+      console.log('Returning cached extraction result');
+      return this.cache.get(textHash)!;
+    }
+
     const prompt = this.createExtractionPrompt(pdfText);
 
     try {
@@ -57,9 +67,23 @@ export class AIService {
 
       // Parse and validate the extracted data
       const parsedData = JSON.parse(cleanedText);
-      return ExtractedDataSchema.parse(parsedData);
+      const validatedData = ExtractedDataSchema.parse(parsedData);
+      
+      // Cache the result
+      this.cache.set(textHash, validatedData);
+      
+      return validatedData;
     } catch (error) {
       console.error('Error extracting data with Gemini:', error);
+      
+      // If it's a quota error, provide a fallback response
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        console.log('Quota exceeded, returning fallback data structure');
+        const fallbackData = this.getFallbackData();
+        this.cache.set(textHash, fallbackData);
+        return fallbackData;
+      }
+      
       throw new Error(`Failed to extract data with Gemini: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -179,9 +203,65 @@ CRITICAL INSTRUCTIONS:
 
   private async extractWithGemini(prompt: string): Promise<string> {
     const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
+    
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error: any) {
+      // Handle quota exceeded errors specifically
+      if (error.message && error.message.includes('429 Too Many Requests')) {
+        const quotaError = new Error('Gemini API quota exceeded. You have reached the free tier limit of 50 requests per day. Please try again tomorrow or upgrade to a paid plan.');
+        quotaError.name = 'QuotaExceededError';
+        throw quotaError;
+      }
+      
+      // Handle other API errors
+      if (error.message && error.message.includes('API key')) {
+        throw new Error('Invalid or missing Gemini API key. Please check your GEMINI_API_KEY environment variable.');
+      }
+      
+      // Re-throw other errors
+      throw error;
+    }
+  }
+
+  private createTextHash(text: string): string {
+    // Simple hash function for caching
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      const char = text.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return hash.toString();
+  }
+
+  private getFallbackData(): ExtractedData {
+    // Return a basic structure when quota is exceeded
+    return {
+      vendor: {
+        name: "Vendor Name (Quota Exceeded)",
+        address: "Please try again tomorrow or upgrade your API plan",
+        taxId: ""
+      },
+      invoice: {
+        number: "INV-QUOTA-EXCEEDED",
+        date: new Date().toISOString().split('T')[0],
+        currency: "INR",
+        subtotal: 0,
+        taxPercent: 18,
+        total: 0,
+        poNumber: "",
+        poDate: new Date().toISOString().split('T')[0],
+        lineItems: [{
+          description: "API quota exceeded - please try again tomorrow",
+          unitPrice: 0,
+          quantity: 1,
+          total: 0
+        }]
+      }
+    };
   }
 
 }

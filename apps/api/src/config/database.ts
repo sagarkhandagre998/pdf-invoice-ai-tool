@@ -24,7 +24,6 @@ export const connectDB = async (): Promise<void> => {
       maxPoolSize: 1, // Limit connection pool for serverless
       minPoolSize: 0, // Allow connections to close
       maxIdleTimeMS: 30000, // Close connections after 30 seconds
-      bufferMaxEntries: 0, // Disable mongoose buffering
       bufferCommands: false, // Disable mongoose buffering
     };
     
